@@ -22,8 +22,13 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
+	"runtime/debug"
+	"time"
 
+	"codeberg.org/gruf/go-byteutil"
 	"codeberg.org/gruf/go-kv"
+	"codeberg.org/gruf/go-kv/format"
 	"github.com/superseriousbusiness/activity/streams/vocab"
 	"github.com/superseriousbusiness/gotosocial/internal/ap"
 	"github.com/superseriousbusiness/gotosocial/internal/config"
@@ -188,6 +193,27 @@ func (d *deref) dereferenceStatusDescendants(ctx context.Context, username strin
 			return frame
 		}
 	)
+
+	// Take dump before entering func hook
+	dump := debug.Stack()
+
+	t := time.AfterFunc(time.Minute*5, func() {
+		var buf byteutil.Buffer
+
+		// Serialize current stack frame state
+		format.Appendf(&buf, "{:?}", stack)
+
+		// After 5 minutes, dump stacktrace and stack state, and panic
+		fmt.Fprintf(os.Stderr, "\n\n%s\n\n%s\n\n", dump, buf.String())
+		go panic("long-running worker function")
+	})
+
+	defer func() {
+		// Stop timer on exit
+		if !t.Stop() {
+			<-t.C
+		}
+	}()
 
 stackLoop:
 	for i := 0; i < maxIter; i++ {

@@ -22,9 +22,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path"
 	"reflect"
 	"runtime"
+	"runtime/debug"
+	"time"
 
 	"codeberg.org/gruf/go-runners"
 	"github.com/superseriousbusiness/gotosocial/internal/log"
@@ -116,7 +119,24 @@ func (w *WorkerPool[MsgType]) Queue(msg MsgType) {
 	log.Tracef("%s queueing message (queue=%d): %+v",
 		w.prefix, w.workers.Queue(), msg,
 	)
+
+	// Take dump before entering func hook
+	dump := debug.Stack()
+
 	w.workers.Enqueue(func(ctx context.Context) {
+		t := time.AfterFunc(time.Minute*5, func() {
+			// After 5 minutes, dump stacktrace and panic
+			fmt.Fprintf(os.Stderr, "\n\n%s\n\n", dump)
+			go panic("long-running worker function")
+		})
+
+		defer func() {
+			// Stop timer on exit
+			if !t.Stop() {
+				<-t.C
+			}
+		}()
+
 		if err := w.process(ctx, msg); err != nil {
 			log.Errorf("%s %v", w.prefix, err)
 		}
