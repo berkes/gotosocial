@@ -4,5 +4,7 @@ all:
 	./scripts/bundle.sh
 
 deploy:
-	scp gotosocial deploy@generous-kitchin.webschuur.com:/u/apps/gotosocial/current/
+	rsync gotosocial deploy@generous-kitchin.webschuur.com:/u/apps/gotosocial/current/
 	scp -r web/assets/ deploy@generous-kitchin.webschuur.com:/u/apps/gotosocial/current/web/
+	ssh deploy@generous-kitchin.webschuur.com systemctl restart gotosocial
+	ssh deploy@generous-kitchin.webschuur.com systemctl status gotosocial
