@@ -6,5 +6,5 @@ all:
 deploy:
 	rsync gotosocial deploy@generous-kitchin.webschuur.com:/u/apps/gotosocial/current/
 	scp -r web/assets/ deploy@generous-kitchin.webschuur.com:/u/apps/gotosocial/current/web/
-	ssh deploy@generous-kitchin.webschuur.com systemctl restart gotosocial
-	ssh deploy@generous-kitchin.webschuur.com systemctl status gotosocial
+	ssh deploy@generous-kitchin.webschuur.com sudo /bin/systemctl restart gotosocial.service
+	ssh deploy@generous-kitchin.webschuur.com sudo /bin/systemctl status gotosocial.service
