@@ -1,7 +1,6 @@
 all:
 	./scripts/build.sh
 	yarn install --cwd web/source/
-	./scripts/bundle.sh
 
 deploy:
 	rsync gotosocial deploy@generous-kitchin.webschuur.com:/u/apps/gotosocial/current/
